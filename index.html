@@ -3,142 +3,157 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>JUGNO FIGHTER</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JUGNO FIGHTER 3D V2</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#080910;color:white;font-family:Arial;text-align:center}
-h1{color:gold;text-shadow:0 0 15px orange;margin:16px 0 5px}
-h3{color:#ffc928}
-button{border:2px solid gold;background:linear-gradient(135deg,#ffdf43,#b87900);color:#111;font-weight:bold;border-radius:12px;padding:13px;font-size:15px}
-button:active{transform:scale(.94)}
-#select{padding:12px}
-#roster{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.card{background:linear-gradient(145deg,#27263c,#10101a);border:2px solid #555;border-radius:12px;padding:12px}
-.card.selected{border-color:gold;box-shadow:0 0 15px gold}
-.avatar{font-size:48px;margin:8px}
-.card b{color:gold}
-.card small{display:block;color:#bbb;margin:5px}
-#start{margin:16px;width:90%;font-size:19px}
+body{margin:0;background:#080810;color:white;font-family:Arial;text-align:center}
+h1{color:gold}
+#menu{padding:12px}
+#players{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.card{background:#202033;border:2px solid #777;padding:12px;border-radius:12px}
+.card.selected{border-color:gold}
+.card div{font-size:38px}
+button{background:linear-gradient(120deg,#ffe45c,#bd7900);border:0;border-radius:10px;padding:13px;font-weight:bold;margin:5px}
+#start{width:90%;font-size:18px}
 #game{display:none}
-.top{display:flex;justify-content:space-around;padding:10px}
-.bar{height:17px;background:#444;border:1px solid white;width:42vw}
-.hp{height:100%;background:#20e75a;width:100%}
-#arena{height:42vh;min-height:260px;position:relative;overflow:hidden;
-background:radial-gradient(ellipse at 50% 35%,#67416e,#20152e 65%,#090a12);
-border-top:4px solid gold;border-bottom:5px solid gold}
-#arena:after{content:"";position:absolute;bottom:0;width:100%;height:22%;background:linear-gradient(#44334a,#17121d);border-top:2px solid #b89b5b}
-#fighters{position:absolute;bottom:18%;left:0;width:100%;display:flex;justify-content:space-around;align-items:end;z-index:2}
-.fighter{width:90px;transition:transform .15s}
-.person{font-size:76px;filter:drop-shadow(0 5px 5px #000);transform:scaleX(-1)}
-.enemy .person{transform:scaleX(1)}
-.name{color:gold;font-weight:bold;text-shadow:0 2px 5px black}
-#message{color:gold;font-size:20px;padding:12px}
-.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:12px}
-.controls button{min-height:58px}
-#back{margin:8px}
+#view{height:55vh;min-height:280px;width:100%;display:block}
+#status{color:gold;padding:8px}
+.controls{display:flex;justify-content:center;flex-wrap:wrap}
+#hp{width:85%;height:16px;background:#555;margin:auto}
+#health{height:100%;width:100%;background:#20e65c}
 </style>
 </head>
 <body>
-<h1>⚔ JUGNO FIGHTER ⚔</h1>
-<div id="select">
-<h3>CHOOSE YOUR FIGHTER</h3>
-<div id="roster"></div>
+<h1>⚔ JUGNO FIGHTER 3D ⚔</h1>
+<div id="menu">
+<h3>SELECT YOUR FIGHTER</h3>
+<div id="players"></div>
 <button id="start" onclick="startGame()">START FIGHT 🔥</button>
 </div>
 <div id="game">
-<div class="top">
-<div><b id="n1">PLAYER</b><div class="bar"><div class="hp" id="hp1"></div></div></div>
-<div><b id="n2">RIVAL</b><div class="bar"><div class="hp" id="hp2"></div></div></div>
-</div>
-<div id="arena">
-<div id="fighters">
-<div class="fighter" id="p1"><div class="person" id="face1">🥋</div><div class="name" id="label1"></div></div>
-<div class="fighter enemy" id="p2"><div class="person" id="face2">🥊</div><div class="name" id="label2"></div></div>
-</div>
-</div>
-<div id="message">FIGHT! 🔥</div>
+<div id="hp"><div id="health"></div></div>
+<div id="status">FIGHT!</div>
+<canvas id="view"></canvas>
 <div class="controls">
 <button onclick="move(-1)">◀ LEFT</button>
-<button onclick="hit(12)">👊 PUNCH</button>
-<button onclick="hit(20)">🦵 KICK</button>
+<button onclick="attack(10)">👊 PUNCH</button>
+<button onclick="attack(18)">🦵 KICK</button>
+<button onclick="attack(30)">⚡ POWER</button>
 <button onclick="move(1)">RIGHT ▶</button>
-<button onclick="hit(30)">⚡ SPECIAL</button>
-<button onclick="resetFight()">🔄 RESET</button>
 </div>
-<button id="back" onclick="backToSelect()">CHANGE FIGHTER</button>
+<button onclick="location.reload()">BACK / RESET</button>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-const roster=[
-["ARSLAN","🥋","Karate Master"],
-["ALINA","🥷","Speed Fighter"],
-["RAIDEN","⚡","Thunder Power"],
-["SHADOW","🥷","Ninja Warrior"],
-["BLAZE","🔥","Fire Fighter"],
-["TITAN","💪","Heavy Champion"],
-["VIPER","🐍","Deadly Fighter"],
-["KHAN","🛡️","Warrior King"],
-["NOVA","🌟","Energy Master"],
-["FALCON","🦅","Sky Fighter"]
+const fighters=[
+["ARSLAN","🥋"],["ALINA","🥷"],
+["RAIDEN","⚡"],["SHADOW","🥷"],
+["BLAZE","🔥"],["TITAN","💪"],
+["VIPER","🐍"],["KHAN","🛡️"],
+["NOVA","🌟"],["FALCON","🦅"]
 ];
-let chosen=0,enemy=1,h1=100,h2=100,x=0,playing=false;
-const rosterBox=document.getElementById("roster");
-function drawRoster(){
-rosterBox.innerHTML="";
-roster.forEach((f,i)=>{
-let c=document.createElement("div");
-c.className="card"+(i===chosen?" selected":"");
-c.innerHTML='<div class="avatar">'+f[1]+'</div><b>'+f[0]+'</b><small>'+f[2]+'</small>';
-c.onclick=()=>{chosen=i;drawRoster()};
-rosterBox.appendChild(c);
+let selected=0,scene,camera,renderer,player,enemy;
+let health=100,position=0,playing=false;
+const players=document.getElementById("players");
+fighters.forEach((f,i)=>{
+let el=document.createElement("div");
+el.className="card"+(i===0?" selected":"");
+el.innerHTML="<div>"+f[1]+"</div><b>"+f[0]+"</b>";
+el.onclick=()=>{
+selected=i;
+document.querySelectorAll(".card").forEach(x=>x.classList.remove("selected"));
+el.classList.add("selected");
+};
+players.appendChild(el);
 });
+function makeFighter(x,color){
+let group=new THREE.Group();
+const mat=new THREE.MeshStandardMaterial({color});
+function part(w,h,d,y,material){
+let m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
+m.position.y=y;group.add(m);return m;
+}
+part(.75,1.05,.4,1.45,mat);
+let skin=new THREE.MeshStandardMaterial({color:0xd9a078});
+let head=new THREE.Mesh(new THREE.SphereGeometry(.34,20,20),skin);
+head.position.y=2.25;group.add(head);
+let arm1=part(.23,.9,.25,1.45,skin);
+arm1.position.x=-.53;arm1.rotation.z=-.3;
+let arm2=part(.23,.9,.25,1.45,skin);
+arm2.position.x=.53;arm2.rotation.z=.3;
+let leg1=part(.3,.9,.32,.48,mat);
+leg1.position.x=-.23;
+let leg2=part(.3,.9,.32,.48,mat);
+leg2.position.x=.23;
+group.position.x=x;scene.add(group);
+return group;
 }
 function startGame(){
-enemy=(chosen+1)%roster.length;
-document.getElementById("select").style.display="none";
-document.getElementById("game").style.display="block";
-document.getElementById("n1").innerText=roster[chosen][0];
-document.getElementById("n2").innerText=roster[enemy][0];
-document.getElementById("label1").innerText=roster[chosen][0];
-document.getElementById("label2").innerText=roster[enemy][0];
-document.getElementById("face1").innerText=roster[chosen][1];
-document.getElementById("face2").innerText=roster[enemy][1];
-resetFight();
+if(!window.THREE){
+alert("Internet connection required to load 3D engine");
+return;
 }
-function render(){
-document.getElementById("hp1").style.width=h1+"%";
-document.getElementById("hp2").style.width=h2+"%";
-document.getElementById("p1").style.transform="translateX("+x+"px)";
+document.getElementById("menu").style.display="none";
+document.getElementById("game").style.display="block";
+health=100;position=0;playing=true;
+scene=new THREE.Scene();
+scene.background=new THREE.Color(0x17132d);
+camera=new THREE.PerspectiveCamera(50,1,.1,100);
+camera.position.set(0,4.5,9);
+camera.lookAt(0,1,0);
+renderer=new THREE.WebGLRenderer({canvas:document.getElementById("view"),antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+scene.add(new THREE.HemisphereLight(0xffffff,0x444466,2));
+let light=new THREE.DirectionalLight(0xffffff,2);
+light.position.set(3,8,5);scene.add(light);
+let floor=new THREE.Mesh(new THREE.BoxGeometry(12,.3,9),new THREE.MeshStandardMaterial({color:0x383342}));
+floor.position.y=-.2;scene.add(floor);
+for(let i=0;i<4;i++){
+let pillar=new THREE.Mesh(new THREE.BoxGeometry(.35,4,.35),new THREE.MeshStandardMaterial({color:0xffb800}));
+pillar.position.set(i<2?-5:5,1.8,i%2? -3:3);scene.add(pillar);
+}
+player=makeFighter(-2,0xe3aa19);
+enemy=makeFighter(2,0xb52235);
+enemy.rotation.y=Math.PI;
+resize();
+window.onresize=resize;
+animate();
+document.getElementById("status").innerText=fighters[selected][0]+" VS "+fighters[(selected+1)%10][0];
+}
+function resize(){
+if(!renderer)return;
+let c=document.getElementById("view");
+renderer.setSize(c.clientWidth,c.clientHeight,false);
+camera.aspect=c.clientWidth/c.clientHeight;
+camera.updateProjectionMatrix();
+}
+function animate(){
+if(!playing)return;
+requestAnimationFrame(animate);
+if(enemy&&Math.random()<.01)enemy.position.x=2+(Math.random()-.5)*.7;
+renderer.render(scene,camera);
 }
 function move(d){
 if(!playing)return;
-x=Math.max(-35,Math.min(90,x+d*18));
-render();
+position=Math.max(-1.4,Math.min(1.4,position+d*.3));
+player.position.x=-2+position;
 }
-function hit(d){
+function attack(d){
 if(!playing)return;
-if(Math.abs(x)<105){
-h2=Math.max(0,h2-d);
-document.getElementById("message").innerText=d===30?"⚡ SPECIAL POWER!":d===20?"🦵 POWER KICK!":"👊 PUNCH HIT!";
-document.getElementById("p1").style.transform="translateX("+x+"px) scale(1.12)";
-setTimeout(render,130);
-if(h2===0){playing=false;document.getElementById("message").innerText="🏆 YOU WIN!";}
-}else{
-document.getElementById("message").innerText="GET CLOSER!";
-}
-render();
-}
-function resetFight(){
-h1=100;h2=100;x=0;playing=true;
-document.getElementById("message").innerText="FIGHT! 🔥";
-render();
-}
-function backToSelect(){
+if(Math.abs(player.position.x-enemy.position.x)<3.8){
+health=Math.max(0,health-d);
+document.getElementById("health").style.width=health+"%";
+document.getElementById("status").innerText=d===30?"SPECIAL POWER! ⚡":"HIT! 🔥";
+enemy.rotation.y+=.25;
+if(health===0){
 playing=false;
-document.getElementById("game").style.display="none";
-document.getElementById("select").style.display="block";
+document.getElementById("status").innerText="🏆 YOU WIN!";
 }
-drawRoster();
+}else{
+document.getElementById("status").innerText="MOVE CLOSER!";
+}
+}
 </script>
 </body>
 </html>
